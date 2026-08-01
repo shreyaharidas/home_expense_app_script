@@ -22,13 +22,13 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install project dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          elif [ -f package.json ]; then
-            npm install
-          fi
+      # - name: Install project dependencies
+      #   run: |
+      #     if [ -f package-lock.json ]; then
+      #       npm ci
+      #     elif [ -f package.json ]; then
+      #       npm install
+      #     fi
 
       - name: Install clasp
         run: npm install -g @google/clasp
