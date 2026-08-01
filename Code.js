@@ -1,5 +1,8 @@
+
+
 function calculateSummary() {
   try {
+    Logger.log ("testing if code is pushed")
     Logger.log("inside calculateSummary")
     const { monthlySheets, summarySheet: summarySheetToEdit } = getSheets();
     const sharesOwed = {};
