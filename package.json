@@ -1,0 +1,23 @@
+{
+  "name": "home_expense_app_script",
+  "version": "1.0.0",
+  "description": "appscript for google sheets to manage home expenses",
+  "homepage": "https://github.com/shreyaharidas/home_expense_app_script#readme",
+  "bugs": {
+    "url": "https://github.com/shreyaharidas/home_expense_app_script/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shreyaharidas/home_expense_app_script.git"
+  },
+  "license": "ISC",
+  "author": "Shreya Haridas",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@google/clasp": "^3.3.0"
+  }
+}

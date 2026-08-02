@@ -1,22 +1,3 @@
-function currentTime() {
-  const currentDate = new Date();
-
-  const formattedDate = currentDate.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-
-  return formattedDate; // Example output: "23-12-24 15:45"
-}
-
-function findCurrentSheetRowIndex(rowData, sheetName) {
-  return rowData[0] === sheetName
-}
-
 function getAndValidateSpreadSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -47,6 +28,11 @@ Logger.log("activesheet sheets")
   Logger.log(sheetNames)
   return sheetNames;
 }
+
+function findCurrentSheetRowIndex(rowData, sheetName) {
+  return rowData[0] === sheetName
+}
+
 
 function getUntalliedSheets(){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -99,6 +85,21 @@ function getSheets(sheetType) {
   }
 }
 
+function loader(load) {
+  const sheet = getSheets(sheetTypes.summary).summarySheet
+
+  const range = sheet.getRange("K1:K4");
+
+  if (load) {
+    range.setBackground(bgColors.toEditColor);
+    range.setValue("Calculating...");
+  } else {
+    range.setBackground("white");
+    range.setValue("");
+  }
+  Logger.log(`Loader set: ${load ? "Loading" : "Cleared"}`);
+}
+
 function getRangeData(sheetType, editSheetName) {
 
   Logger.log("from get range 1")
@@ -131,19 +132,3 @@ function getRangeData(sheetType, editSheetName) {
   const values = range.getValues().filter(row => row.some(cell => cell !== ""));
   return values.length ? values : [];
 }
-
-function loader(load) {
-  const sheet = getSheets(sheetTypes.summary).summarySheet
-
-  const range = sheet.getRange("K1:K4");
-
-  if (load) {
-    range.setBackground(bgColors.toEditColor);
-    range.setValue("Calculating...");
-  } else {
-    range.setBackground("white");
-    range.setValue("");
-  }
-  Logger.log(`Loader set: ${load ? "Loading" : "Cleared"}`);
-}
-

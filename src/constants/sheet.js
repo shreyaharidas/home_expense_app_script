@@ -1,9 +1,3 @@
-const financialSourceOwners = {
-  "Amit's Wallet": "Amit",
-  "Shreya's Wallet": "Shreya",
-  // Add more sources and owners as needed
-};
-
 const monthlySheet = {
   financialSourceCol: 3,
   amountCol: 5,
@@ -14,7 +8,6 @@ const monthlySheet = {
 }
 
 const monthlySheetEditCols = [monthlySheet.amountCol, monthlySheet.splitRatioCol]
-
 
 const summarySheet = {
   name: "Z-Summary",
@@ -30,13 +23,6 @@ const summarySheet = {
   S2A: "S to A",
   editLog: "lastEdit",
 },
-}
-
-const defaultSplitRatio="3:2"
-
-const bgColors = {
-  toEditColor: "orange",
-  editedColor: "#D1FFBD"
 }
 
 const sheetTypes = {
