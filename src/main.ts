@@ -4,7 +4,6 @@ import { getRangeData, getSheets, getUntalliedSheets, findCurrentSheetRowIndex }
 
 export function calculateSummary(): void {
   try {
-    Logger.log ("testing if code is pushed")
     Logger.log("inside calculateSummary")
     const { monthlySheets, summarySheet: summarySheetToEdit } = getSheets();
     const sharesOwed: Record<string, { Amit: number; Shreya: number }> = {};
