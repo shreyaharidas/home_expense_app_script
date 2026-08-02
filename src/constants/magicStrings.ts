@@ -1,0 +1,1 @@
+export const TWO_DIGIT:string="2-digit";

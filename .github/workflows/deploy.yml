@@ -37,6 +37,18 @@ jobs:
           test -n "$CLASP_JSON"
           printf "%s" "$CLASP_JSON" > .clasp.json
 
+      - name: Build Apps Script bundle
+        run: npm run build
+
+      - name: Configure clasp build directory
+        run: |
+          node --input-type=module -e '
+            import { readFile, writeFile } from "node:fs/promises";
+            const config = JSON.parse(await readFile(".clasp.json", "utf8"));
+            config.rootDir = "dist";
+            await writeFile(".clasp.json", `${JSON.stringify(config, null, 2)}\n`);
+          '
+
       - name: Restore clasp credentials
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}

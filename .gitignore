@@ -44,3 +44,4 @@ Generated\ Files/
 .clasprc.json
 
 node_modules/
+dist/

@@ -1,9 +1,12 @@
-function calculateSummary() {
+import { currentTime } from "./utils";
+import { financialSourceOwners, monthlySheet, otherSheetContants, sheetTypes, summarySheet } from "./constants";
+import { getRangeData, getSheets, getUntalliedSheets, findCurrentSheetRowIndex } from "./utils/sheet";
+
+export function calculateSummary(): void {
   try {
-    Logger.log ("testing if code is pushed")
     Logger.log("inside calculateSummary")
     const { monthlySheets, summarySheet: summarySheetToEdit } = getSheets();
-    const sharesOwed = {};
+    const sharesOwed: Record<string, { Amit: number; Shreya: number }> = {};
     
   const untalliedSheets=getUntalliedSheets();
 
@@ -28,15 +31,22 @@ function calculateSummary() {
 
           Logger.log("financialSource")
           Logger.log(financialSource)
+
+          if (typeof financialSource !== "string") {
+            continue;
+          }
+
           Logger.log("financialSourceOwners[financialSource]")
           Logger.log(financialSourceOwners[financialSource])
 
-          if (financialSourceOwners[financialSource] === "Amit") {
+          const owner = financialSourceOwners[financialSource];
+
+          if (owner === "Amit") {
             sharesOwed[sheet].Shreya += Number(row[monthlySheet.shreyasShareCol - 1]);
              Logger.log("SFS")
             Logger.log(row[monthlySheet.shreyasShareCol - 1])
            
-          } else if (financialSourceOwners[financialSource] === "Shreya") {
+          } else if (owner === "Shreya") {
             sharesOwed[sheet].Amit += Number(row[monthlySheet.amitsShareCol - 1]);
             Logger.log("AFS")
             Logger.log(row[monthlySheet.amitsShareCol - 1])
@@ -55,9 +65,10 @@ function calculateSummary() {
     const summaryData = sheetRange.getValues();
 
     [...getUntalliedSheets()].forEach((sheetName) => {
-      const editRowNumber = summaryData.findIndex((item) => findCurrentSheetRowIndex(item, sheetName)) + 1;
+      const foundRowIndex = summaryData.findIndex((item) => findCurrentSheetRowIndex(item, sheetName));
+      const editRowNumber = foundRowIndex === -1 ? summarySheetToEdit.getLastRow() + 1 : foundRowIndex + 1;
 
-      if (editRowNumber === -1) {
+      if (foundRowIndex === -1) {
         const lastRowIndex = sheetRange.getLastRow();
         summarySheetToEdit.getRange(lastRowIndex + 1, otherSheetContants.colStart).setValue(sheetName);
       }
@@ -71,7 +82,7 @@ function calculateSummary() {
 
         const cell = summarySheetToEdit.getRange(editRowNumber, colIndex+1 );
         Logger.log("row data for set")
-        Logger.log(Array.from(cell))
+        Logger.log(cell.getA1Notation())
         if (header === summarySheet.summarySheetHeaders.amitOwes) {
           cell.setValue(sharesOwed[sheetName].Amit);
         } else if (header === summarySheet.summarySheetHeaders.shreyaOwes) {
@@ -98,7 +109,7 @@ function calculateSummary() {
   }
 }
 
-function executeCalculationProcess(calculatorCallback) {
+export function executeCalculationProcess(calculatorCallback: () => void): void {
 
   Logger.log("inside execute")
 
