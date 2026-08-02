@@ -17,8 +17,8 @@
   "scripts": {
     "build": "npm run typecheck && node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run --sequence.random",
+    "test:watch": "vitest --sequence.random"
   },
   "devDependencies": {
     "@google/clasp": "^3.3.0",
