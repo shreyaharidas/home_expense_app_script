@@ -15,6 +15,8 @@ await build({
   outfile: `${outputDirectory}/Code.js`,
   footer: {
     js: [
+      "function onOpen(e) { return HomeExpenseApp.onOpen(e); }",
+      "function onSelectionChange(e) { return HomeExpenseApp.onSelectionChange(e); }",
       "function onCalculate() { return HomeExpenseApp.onCalculate.apply(null, arguments); }",
       "function handleEdit(e) { return HomeExpenseApp.handleEdit(e); }",
     ].join("\n"),
