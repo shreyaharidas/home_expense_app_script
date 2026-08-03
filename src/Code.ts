@@ -2,6 +2,19 @@ import { defaultSplitRatio, monthlySheet, monthlySheetEditCols, otherSheetContan
 import { calculateSummary, executeCalculationProcess } from "./main";
 import { getAndValidateSpreadSheet } from "./utils/sheet";
 
+export function onOpen(): void {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const activeSheet = spreadsheet.getActiveSheet();
+
+  Logger.log(`Workbook ID: ${spreadsheet.getId()}`);
+  Logger.log(`Worksheet ID: ${activeSheet.getSheetId()}`);
+}
+
+export function onSelectionChange(): void {
+  const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  Logger.log(`Worksheet ID: ${activeSheet.getSheetId()}`);
+}
+
 export function onCalculate(): void {
   const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   const activeSheetName = activeSheet.getName();
@@ -67,4 +80,5 @@ export function handleEdit(e: GoogleAppsScript.Events.SheetsOnEdit): void {
     sheet.getRange(rowNumber, monthlySheet.amitsShareCol).setValue(amitsShare);
     sheet.getRange(rowNumber, monthlySheet.shreyasShareCol).setValue(shreyasShare);
   }
+
 }
