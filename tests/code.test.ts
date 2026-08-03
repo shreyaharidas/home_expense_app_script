@@ -66,7 +66,7 @@ describe("Code.ts event handlers", () => {
       })),
     });
 
-    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const logSpy = vi.spyOn((globalThis as any).Logger, "log").mockImplementation(() => undefined);
 
     onOpen();
 
@@ -82,9 +82,9 @@ describe("Code.ts event handlers", () => {
       })),
     });
 
-    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const logSpy = vi.spyOn((globalThis as any).Logger, "log").mockImplementation(() => undefined);
 
-    onSelectionChange({} as GoogleAppsScript.Events.SheetsOnSelectionChange);
+    onSelectionChange();
 
     expect(logSpy).toHaveBeenCalledWith("Worksheet ID: 77");
   });
