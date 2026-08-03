@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { handleEdit, onCalculate } from "../src/Code";
+import { handleEdit, onCalculate, onOpen, onSelectionChange } from "../src/Code";
 import { defaultSplitRatio, monthlySheet, otherSheetContants, summarySheet } from "../src/constants";
 import * as mainModule from "../src/main";
 
@@ -12,17 +12,20 @@ function createSheet({
   activeRow = 2,
   activeCol = monthlySheet.amountCol,
   lastColumn = monthlySheet.totalCols,
+  sheetId = 101,
 }: {
   name: string;
   rowValues?: Array<unknown>;
   activeRow?: number;
   activeCol?: number;
   lastColumn?: number;
+  sheetId?: number;
 }) {
   const writes: RecordedWrite[] = [];
 
   const sheet = {
     getName: vi.fn(() => name),
+    getSheetId: vi.fn(() => sheetId),
     getLastColumn: vi.fn(() => lastColumn),
     getActiveRange: vi.fn(() => ({
       getRow: () => activeRow,
@@ -51,6 +54,39 @@ describe("Code.ts event handlers", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.stubGlobal("Logger", { log: vi.fn() });
+    vi.stubGlobal("console", { log: vi.fn() });
+  });
+
+  it("logs the workbook id and current sheet id when the spreadsheet opens", () => {
+    const sheet = createSheet({ name: "January", sheetId: 42 });
+    vi.stubGlobal("SpreadsheetApp", {
+      getActiveSpreadsheet: vi.fn(() => ({
+        getId: vi.fn(() => "workbook-123"),
+        getActiveSheet: vi.fn(() => sheet),
+      })),
+    });
+
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    onOpen();
+
+    expect(logSpy).toHaveBeenCalledWith("Workbook ID: workbook-123");
+    expect(logSpy).toHaveBeenCalledWith("Worksheet ID: 42");
+  });
+
+  it("logs the active sheet id when the selection changes", () => {
+    const sheet = createSheet({ name: "January", sheetId: 77 });
+    vi.stubGlobal("SpreadsheetApp", {
+      getActiveSpreadsheet: vi.fn(() => ({
+        getActiveSheet: vi.fn(() => sheet),
+      })),
+    });
+
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    onSelectionChange({} as GoogleAppsScript.Events.SheetsOnSelectionChange);
+
+    expect(logSpy).toHaveBeenCalledWith("Worksheet ID: 77");
   });
 
   it("does nothing when onCalculate is run on a non-summary sheet", () => {
