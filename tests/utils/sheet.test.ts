@@ -8,6 +8,8 @@ import {
   getSheets,
 } from "../../src/utils/sheet";
 import { sheetTypes, summarySheet, otherSheetContants } from "../../src/constants";
+import { WORKBOOK_ID } from "../../src/constants/globals";
+import { setGlobalIds } from "../../src/utils/globalIdUtils";
 
 describe("sheet utilities", () => {
   beforeEach(() => {
@@ -26,13 +28,13 @@ describe("sheet utilities", () => {
     });
 
     it("returns the active spreadsheet when it is the Home Expenses workbook", () => {
-      getName.mockReturnValue("Home Expenses");
+      setGlobalIds({ type: "workbookId", id: WORKBOOK_ID });
 
       expect(getAndValidateSpreadSheet()).toBe(spreadsheet);
     });
 
     it("returns undefined for a different workbook", () => {
-      getName.mockReturnValue("Personal Budget");
+      setGlobalIds({ type: "workbookId", id: "other-workbook-id" });
 
       expect(getAndValidateSpreadSheet()).toBeUndefined();
     });

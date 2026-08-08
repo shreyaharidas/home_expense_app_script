@@ -1,18 +1,22 @@
 import { bgColors, monthlySheet, otherSheetContants, sheetTypes, summarySheet } from "../constants";
+import { WORKBOOK_ID } from "../constants/globals";
+import { getGlobalIds } from "./globalIdUtils";
 
 export function getAndValidateSpreadSheet(): GoogleAppsScript.Spreadsheet.Spreadsheet | undefined {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  if (ss.getName() !== "Home Expenses") {
+  const { workbookId } = getGlobalIds();
+
+  if (workbookId !== WORKBOOK_ID) {
     return undefined;
   }
 
-  return ss;
+  return SpreadsheetApp.getActiveSpreadsheet();
 }
 
+// TODO: change this to use global id instead of iterating
 function getAllSheets(): string[] {
-  const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const sheets = activeSpreadsheet.getSheets();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ss.getSheets();
 
   Logger.log("activesheet sheets");
   Logger.log(sheets);
@@ -71,6 +75,7 @@ export function getRangeData(sheetType: string, editSheetName: string): Array<Ar
   return values.length ? values : [];
 }
 
+// TO
 export function getUntalliedSheets(): string[] {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const summarySheetRef = ss.getSheetByName("Z-Summary");
@@ -103,6 +108,7 @@ export function getUntalliedSheets(): string[] {
   return untalliedSheets;
 }
 
+// TODO: use global id
 export function getSheets(sheetType?: string): {
   summarySheet?: GoogleAppsScript.Spreadsheet.Sheet;
   monthlySheets?: GoogleAppsScript.Spreadsheet.Sheet[];
