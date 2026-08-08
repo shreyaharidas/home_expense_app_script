@@ -10,11 +10,6 @@ export function onOpen(): void {
   Logger.log(`Worksheet ID: ${activeSheet.getSheetId()}`);
 }
 
-export function onSelectionChange(): void {
-  const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  Logger.log(`Worksheet ID: ${activeSheet.getSheetId()}`);
-}
-
 export function onCalculate(): void {
   const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 

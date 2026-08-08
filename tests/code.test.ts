@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { handleEdit, onCalculate, onOpen, onSelectionChange } from "../src/Code";
+import { handleEdit, onCalculate, onOpen } from "../src/Code";
 import { defaultSplitRatio, monthlySheet, otherSheetContants, summarySheet } from "../src/constants";
 import { SHEET_IDS, WORKBOOK_ID } from "../src/constants/globals";
 import * as mainModule from "../src/main";
@@ -91,21 +91,6 @@ describe("Code.ts event handlers", () => {
 
     expect(logSpy).toHaveBeenCalledWith("Workbook ID: workbook-123");
     expect(logSpy).toHaveBeenCalledWith("Worksheet ID: 42");
-  });
-
-  it("logs the active sheet id when the selection changes", () => {
-    const sheet = createSheet({ name: "January", sheetId: 77 });
-    vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => ({
-        getActiveSheet: vi.fn(() => sheet),
-      })),
-    });
-
-    const logSpy = vi.spyOn((globalThis as any).Logger, "log").mockImplementation(() => undefined);
-
-    onSelectionChange();
-
-    expect(logSpy).toHaveBeenCalledWith("Worksheet ID: 77");
   });
 
   it("does nothing when onCalculate is run on a non-summary sheet", () => {

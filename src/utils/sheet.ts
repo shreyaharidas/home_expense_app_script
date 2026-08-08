@@ -1,4 +1,4 @@
-import { bgColors, monthlySheet, otherSheetContants, sheetTypes, summarySheet } from "../constants";
+import { monthlySheet, otherSheetContants, sheetTypes, summarySheet } from "../constants";
 
 
 // TODO: change this to use global id instead of iterating
@@ -133,24 +133,4 @@ export function getSheets(sheetType?: string): {
   }
 
   return {};
-}
-
-function loader(load: boolean) {
-  const sheet = getSheets(sheetTypes.summary).summarySheet;
-
-  if (!sheet) {
-    throw new Error("Summary sheet not found.");
-  }
-
-  const range = sheet.getRange("K1:K4");
-
-  if (load) {
-    range.setBackground(bgColors.toEditColor);
-    range.setValue("Calculating...");
-  } else {
-    range.setBackground("white");
-    range.setValue("");
-  }
-
-  Logger.log(`Loader set: ${load ? "Loading" : "Cleared"}`);
 }
