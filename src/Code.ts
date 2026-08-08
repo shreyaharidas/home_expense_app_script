@@ -82,7 +82,6 @@ export function handleEdit(e?: GoogleAppsScript.Events.SheetsOnEdit): void {
     sheet.getRange(rowNumber, monthlySheet.splitRatioCol).setValue(defaultSplitRatio);
   }
 
-  sheet.getRange(rowNumber, monthlySheet.amitsShareCol).setValue(amitsShare);
-  sheet.getRange(rowNumber, monthlySheet.shreyasShareCol).setValue(shreyasShare);
+  sheet.getRange(rowNumber, monthlySheet.amitsShareCol, 1, 2).setValues([[amitsShare, shreyasShare]]);
 }
 
