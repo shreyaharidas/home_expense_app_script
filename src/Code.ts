@@ -1,6 +1,6 @@
 import { defaultSplitRatio, monthlySheet, monthlySheetEditCols, otherSheetContants, summarySheet } from "./constants";
 import { SHEET_IDS } from "./constants/globals";
-import { calculateSummary, executeCalculationProcess } from "./main";
+import { calculateSummary } from "./main";
 
 export function onOpen(): void {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -21,7 +21,7 @@ export function onCalculate(): void {
   if (activeSheet.getSheetId().toString() !== SHEET_IDS.Z_SUMMARY) return;
 
   try {
-    executeCalculationProcess(calculateSummary);
+    calculateSummary();
   } catch (err) {
     Logger.log("error in onCalculate is");
     Logger.log(err);

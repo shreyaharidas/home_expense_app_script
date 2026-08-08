@@ -101,11 +101,11 @@ describe("Code.ts event handlers", () => {
       })),
     });
 
-    const executeSpy = vi.spyOn(mainModule, "executeCalculationProcess").mockImplementation(() => undefined);
+    const calculateSpy = vi.spyOn(mainModule, "calculateSummary").mockImplementation(() => undefined);
 
     onCalculate();
 
-    expect(executeSpy).not.toHaveBeenCalled();
+    expect(calculateSpy).not.toHaveBeenCalled();
   });
 
   it("runs the calculation process when onCalculate is triggered from the summary sheet", () => {
@@ -116,12 +116,11 @@ describe("Code.ts event handlers", () => {
       })),
     });
 
-    const executeSpy = vi.spyOn(mainModule, "executeCalculationProcess").mockImplementation(() => undefined);
+    const calculateSpy = vi.spyOn(mainModule, "calculateSummary").mockImplementation(() => undefined);
 
     onCalculate();
 
-    expect(executeSpy).toHaveBeenCalledTimes(1);
-    expect(executeSpy).toHaveBeenCalledWith(expect.any(Function));
+    expect(calculateSpy).toHaveBeenCalledTimes(1);
   });
 
   it("swallows calculation errors in onCalculate without throwing", () => {
@@ -132,7 +131,7 @@ describe("Code.ts event handlers", () => {
       })),
     });
 
-    vi.spyOn(mainModule, "executeCalculationProcess").mockImplementation(() => {
+    vi.spyOn(mainModule, "calculateSummary").mockImplementation(() => {
       throw new Error("boom");
     });
 

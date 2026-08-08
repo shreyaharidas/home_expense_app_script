@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { calculateSummary, executeCalculationProcess } from "../src/main";
+import { calculateSummary } from "../src/main";
 import { monthlySheet, otherSheetContants, summarySheet } from "../src/constants";
 
 function createSheet(name: string, rows: Array<Array<unknown>> = []) {
@@ -46,6 +46,17 @@ function createSummarySheet({
         writes.push({ row, col, value });
         if (row > lastRow) {
           lastRow = row;
+        }
+      },
+      setValues: (values: Array<Array<unknown>>) => {
+        values.forEach((rowVals, rIdx) => {
+          rowVals.forEach((val, cIdx) => {
+            writes.push({ row: row + rIdx, col: col + cIdx, value: val });
+          });
+        });
+        const endRow = row + (numRows ?? values.length) - 1;
+        if (endRow > lastRow) {
+          lastRow = endRow;
         }
       },
       getValues: () => {
@@ -185,15 +196,5 @@ describe("main calculation flow", () => {
     expect(writes).toEqual(expect.arrayContaining([{ row: 3, col: 3, value: 0 }, { row: 3, col: 4, value: 0 }]));
   });
 
-  it("invokes the callback once on success and rethrows a wrapped error on failure", () => {
-    const successCallback = vi.fn();
-    expect(() => executeCalculationProcess(successCallback)).not.toThrow();
-    expect(successCallback).toHaveBeenCalledTimes(1);
 
-    const failingCallback = vi.fn(() => {
-      throw new Error("boom");
-    });
-
-    expect(() => executeCalculationProcess(failingCallback)).toThrow("Error in calculateSummary");
-  });
 });
