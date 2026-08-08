@@ -2,7 +2,6 @@ import { defaultSplitRatio, monthlySheet, monthlySheetEditCols, otherSheetContan
 import { SHEET_IDS } from "./constants/globals";
 import { calculateSummary, executeCalculationProcess } from "./main";
 import { getGlobalIds, setGlobalIds } from "./utils/globalIdUtils";
-import { getAndValidateSpreadSheet } from "./utils/sheet";
 
 export function onOpen(): void {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -33,18 +32,27 @@ export function onCalculate(): void {
   }
 }
 
-export function handleEdit(e: GoogleAppsScript.Events.SheetsOnEdit): void {
-  const ss = getAndValidateSpreadSheet();
-  if (!ss) return;
+export function handleEdit(e?: GoogleAppsScript.Events.SheetsOnEdit): void {
+  if (!e?.range) return;
 
-  const { activeWorkSheetId } = getGlobalIds();
+  const sheet = e.range.getSheet();
+  if (
+    sheet.getSheetId().toString() === SHEET_IDS.Z_SUMMARY ||
+    sheet.getName() === summarySheet.name
+  ) {
+    return;
+  }
 
-  if (activeWorkSheetId === SHEET_IDS.Z_SUMMARY) return;
+  const colNumber = e.range.getColumn();
+  if (!monthlySheetEditCols.includes(colNumber)) {
+    return;
+  }
 
-  const sheet = ss.getActiveSheet();
-  const activeRange = sheet.getActiveRange();
-  const rowNumber = activeRange.getRow();
-  const colNumber = activeRange.getColumn();
+  const rowNumber = e.range.getRow();
+  if (rowNumber < otherSheetContants.rowStart) {
+    return;
+  }
+
   const entireRow = sheet.getRange(
     rowNumber,
     otherSheetContants.colStart,
@@ -53,34 +61,32 @@ export function handleEdit(e: GoogleAppsScript.Events.SheetsOnEdit): void {
   );
   const rowValues = entireRow.getValues()[0] as unknown[];
 
-  if (monthlySheetEditCols.includes(colNumber)) {
-    const amount = Number(rowValues[monthlySheet.amountCol - 1]);
-    if (!amount) return;
+  const amount = Number(rowValues[monthlySheet.amountCol - 1]);
+  if (!amount) return;
 
-    const splitRatioCell = rowValues[monthlySheet.splitRatioCol - 1];
-    const splitRatio =
-      typeof splitRatioCell === "string" && splitRatioCell.trim() !== ""
-        ? splitRatioCell.trim()
-        : defaultSplitRatio;
+  const splitRatioCell = rowValues[monthlySheet.splitRatioCol - 1];
+  const splitRatio =
+    typeof splitRatioCell === "string" && splitRatioCell.trim() !== ""
+      ? splitRatioCell.trim()
+      : defaultSplitRatio;
 
-    if (!splitRatio.includes(":")) {
-      throw new Error("ValidationError: ratio should include ':' symbol");
-    }
-
-    const [x, y] = splitRatio.split(":").map(Number);
-    if (isNaN(x) || isNaN(y) || x < 0 || y < 0 || x + y === 0) {
-      throw new Error("ValidationError: Invalid ratio format");
-    }
-
-    const amitsShare = (x / (x + y)) * amount;
-    const shreyasShare = (y / (x + y)) * amount;
-
-    if (splitRatio === defaultSplitRatio) {
-      sheet.getRange(rowNumber, monthlySheet.splitRatioCol).setValue(defaultSplitRatio);
-    }
-
-    sheet.getRange(rowNumber, monthlySheet.amitsShareCol).setValue(amitsShare);
-    sheet.getRange(rowNumber, monthlySheet.shreyasShareCol).setValue(shreyasShare);
+  if (!splitRatio.includes(":")) {
+    throw new Error("ValidationError: ratio should include ':' symbol");
   }
 
+  const [x, y] = splitRatio.split(":").map(Number);
+  if (isNaN(x) || isNaN(y) || x < 0 || y < 0 || x + y === 0) {
+    throw new Error("ValidationError: Invalid ratio format");
+  }
+
+  const amitsShare = (x / (x + y)) * amount;
+  const shreyasShare = (y / (x + y)) * amount;
+
+  if (splitRatio === defaultSplitRatio) {
+    sheet.getRange(rowNumber, monthlySheet.splitRatioCol).setValue(defaultSplitRatio);
+  }
+
+  sheet.getRange(rowNumber, monthlySheet.amitsShareCol).setValue(amitsShare);
+  sheet.getRange(rowNumber, monthlySheet.shreyasShareCol).setValue(shreyasShare);
 }
+

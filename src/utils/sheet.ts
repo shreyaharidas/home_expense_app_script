@@ -1,17 +1,5 @@
 import { bgColors, monthlySheet, otherSheetContants, sheetTypes, summarySheet } from "../constants";
-import { WORKBOOK_ID } from "../constants/globals";
-import { getGlobalIds } from "./globalIdUtils";
 
-export function getAndValidateSpreadSheet(): GoogleAppsScript.Spreadsheet.Spreadsheet | undefined {
-
-  const { workbookId } = getGlobalIds();
-
-  if (workbookId !== WORKBOOK_ID) {
-    return undefined;
-  }
-
-  return SpreadsheetApp.getActiveSpreadsheet();
-}
 
 // TODO: change this to use global id instead of iterating
 function getAllSheets(): string[] {

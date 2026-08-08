@@ -25,15 +25,25 @@ function createSheet({
 }) {
   const writes: RecordedWrite[] = [];
 
+  const rangeObj = {
+    getRow: () => activeRow,
+    getColumn: () => activeCol,
+    getSheet: () => sheet,
+    setValue: (value: unknown) => {
+      writes.push({ row: activeRow, col: activeCol, value });
+    },
+    getValues: () => [rowValues],
+  };
+
   const sheet = {
     getName: vi.fn(() => name),
     getSheetId: vi.fn(() => sheetId),
     getLastColumn: vi.fn(() => lastColumn),
-    getActiveRange: vi.fn(() => ({
-      getRow: () => activeRow,
-      getColumn: () => activeCol,
-    })),
+    getActiveRange: vi.fn(() => rangeObj),
     getRange: vi.fn((row: number, col: number) => ({
+      getRow: () => row,
+      getColumn: () => col,
+      getSheet: () => sheet,
       setValue: (value: unknown) => {
         writes.push({ row, col, value });
       },
@@ -51,6 +61,13 @@ function createSpreadsheet(sheet: GoogleAppsScript.Spreadsheet.Sheet) {
     getName: vi.fn(() => "Home Expenses"),
     getActiveSheet: vi.fn(() => sheet),
   } as unknown as GoogleAppsScript.Spreadsheet.Spreadsheet;
+}
+
+function createEditEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, range?: GoogleAppsScript.Spreadsheet.Range) {
+  return {
+    range: range ?? sheet.getActiveRange(),
+    source: createSpreadsheet(sheet),
+  } as unknown as GoogleAppsScript.Events.SheetsOnEdit;
 }
 
 describe("Code.ts event handlers", () => {
@@ -143,28 +160,15 @@ describe("Code.ts event handlers", () => {
     expect(() => onCalculate()).not.toThrow();
   });
 
-  it("returns early when handleEdit is called for a spreadsheet that is not validated", () => {
-    setGlobalIds({ type: "workbookId", id: "other-workbook-id" });
-
-    const sheet = createSheet({ name: "January" });
-    const spreadsheet = createSpreadsheet(sheet);
-    vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => spreadsheet),
-    });
-
+  it("returns early when handleEdit is called without a valid event or range", () => {
+    expect(() => handleEdit()).not.toThrow();
     expect(() => handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit)).not.toThrow();
-    expect((sheet as typeof sheet & { writes: RecordedWrite[] }).writes).toEqual([]);
   });
 
   it("returns early when the edited sheet is the summary sheet", () => {
-    setGlobalIds({ type: "activeWorkSheetId", id: SHEET_IDS.Z_SUMMARY });
     const sheet = createSheet({ name: summarySheet.name, sheetId: Number(SHEET_IDS.Z_SUMMARY) });
-    const spreadsheet = createSpreadsheet(sheet);
-    vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => spreadsheet),
-    });
 
-    expect(() => handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit)).not.toThrow();
+    expect(() => handleEdit(createEditEvent(sheet))).not.toThrow();
     expect((sheet as typeof sheet & { writes: RecordedWrite[] }).writes).toEqual([]);
   });
 
@@ -174,12 +178,21 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 100, "3:2", "", ""],
       activeCol: 1,
     });
-    const spreadsheet = createSpreadsheet(sheet);
-    vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => spreadsheet),
+
+    handleEdit(createEditEvent(sheet));
+
+    expect((sheet as typeof sheet & { writes: RecordedWrite[] }).writes).toEqual([]);
+  });
+
+  it("returns early when the edited row is before rowStart", () => {
+    const sheet = createSheet({
+      name: "January",
+      rowValues: ["", "", "", "", 100, "3:2", "", ""],
+      activeRow: 1,
+      activeCol: monthlySheet.amountCol,
     });
 
-    handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit);
+    handleEdit(createEditEvent(sheet));
 
     expect((sheet as typeof sheet & { writes: RecordedWrite[] }).writes).toEqual([]);
   });
@@ -190,12 +203,8 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 100, "", "", ""],
       activeCol: monthlySheet.amountCol,
     });
-    const spreadsheet = createSpreadsheet(sheet);
-    vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => spreadsheet),
-    });
 
-    handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit);
+    handleEdit(createEditEvent(sheet));
 
     expect((sheet as typeof sheet & { writes: RecordedWrite[] }).writes).toEqual(
       expect.arrayContaining([
@@ -212,12 +221,8 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 0, "3:2", "", ""],
       activeCol: monthlySheet.amountCol,
     });
-    const spreadsheet = createSpreadsheet(sheet);
-    vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => spreadsheet),
-    });
 
-    handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit);
+    handleEdit(createEditEvent(sheet));
 
     expect((sheet as typeof sheet & { writes: RecordedWrite[] }).writes).toEqual([]);
   });
@@ -228,12 +233,8 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 100, ratio, "", ""],
       activeCol: monthlySheet.splitRatioCol,
     });
-    const spreadsheet = createSpreadsheet(sheet);
-    vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => spreadsheet),
-    });
 
-    expect(() => handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit)).toThrow(/ValidationError/);
+    expect(() => handleEdit(createEditEvent(sheet))).toThrow(/ValidationError/);
   });
 
   it("computes exact shares for a standard ratio and writes them to the correct columns", () => {
@@ -242,12 +243,8 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 100, "1:1", "", ""],
       activeCol: monthlySheet.splitRatioCol,
     });
-    const spreadsheet = createSpreadsheet(sheet);
-    vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => spreadsheet),
-    });
 
-    handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit);
+    handleEdit(createEditEvent(sheet));
 
     expect((sheet as typeof sheet & { writes: RecordedWrite[] }).writes).toEqual(
       expect.arrayContaining([
