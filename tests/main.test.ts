@@ -5,16 +5,21 @@ import { monthlySheet, otherSheetContants, summarySheet } from "../src/constants
 
 function createSheet(name: string, rows: Array<Array<unknown>> = []) {
   const writes: Array<{ row: number; col: number; value: unknown }> = [];
-  const lastRow = rows.length + 1;
+  const lastRow = rows.length;
 
   const sheet = {
     getName: vi.fn(() => name),
     getLastRow: vi.fn(() => lastRow),
-    getRange: vi.fn((row: number, col: number) => ({
+    getRange: vi.fn((row: number, col: number, numRows?: number, numCols?: number) => ({
       setValue: (value: unknown) => {
         writes.push({ row, col, value });
       },
-      getValues: () => rows,
+      getValues: () => {
+        if (numRows !== undefined) {
+          return rows.slice(row - 1, row - 1 + numRows);
+        }
+        return rows.slice(row - 1);
+      },
       getA1Notation: () => `${String.fromCharCode(64 + col)}${row}`,
     })),
   } as unknown as GoogleAppsScript.Spreadsheet.Sheet & { writes: Array<{ row: number; col: number; value: unknown }> };
@@ -196,5 +201,38 @@ describe("main calculation flow", () => {
     expect(writes).toEqual(expect.arrayContaining([{ row: 3, col: 3, value: 0 }, { row: 3, col: 4, value: 0 }]));
   });
 
+  it("processes the very first data row without skipping it", () => {
+    const summarySheetRef = createSummarySheet({
+      dataRows: [["Month", "Tallied", "Amit Owes", "Shreya Owes", "A to S", "S to A", "lastEdit"]],
+      untalliedValues: [["Apr", false]],
+    });
+    const aprSheet = createSheet("Apr", [
+      ["Date", "Description", "Financial Source", "Amount", "Split", "Ratio", "Amit Share", "Shreya Share"],
+      ["", "", "Amit's Wallet", "", "", "", "", 50],
+    ]);
 
+    const aSS = {
+      getSheets: vi.fn(() => [aprSheet, summarySheetRef]),
+      getSheetByName: vi.fn((name: string) => {
+        if (name === "Apr") return aprSheet;
+        if (name === summarySheet.name) return summarySheetRef;
+        return undefined;
+      }),
+    } as unknown as GoogleAppsScript.Spreadsheet.Spreadsheet;
+
+    vi.stubGlobal("SpreadsheetApp", {
+      getActiveSpreadsheet: vi.fn(() => aSS),
+    });
+
+    calculateSummary();
+
+    const writes = (summarySheetRef as typeof summarySheetRef & { writes: Array<{ row: number; col: number; value: unknown }> }).writes;
+    expect(writes).toEqual(
+      expect.arrayContaining([
+        { row: 3, col: 1, value: "Apr" },
+        { row: 3, col: 4, value: 50 },
+        { row: 3, col: 6, value: 50 },
+      ]),
+    );
+  });
 });

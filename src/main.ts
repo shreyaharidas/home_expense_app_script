@@ -29,8 +29,7 @@ export function calculateSummary(): void {
       const data = getRangeData(sheetTypes.monthlySheet, sheet);
       Logger.log("Started loop");
       try {
-        for (let i = 1; i < data.length; i++) {
-          const row = data[i];
+        for (const row of data) {
           Logger.log("row data")
           Logger.log(row)
           const financialSource = row[monthlySheet.financialSourceCol - 1];
