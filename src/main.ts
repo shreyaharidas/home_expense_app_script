@@ -126,12 +126,10 @@ export function executeCalculationProcess(calculatorCallback: () => void): void 
   //   });
   // }
 
-  // loader(true);
   try {
     calculatorCallback();
   } catch (err) {
-    Logger.log(err)
+    Logger.log(err);
     throw new Error("Error in calculateSummary");
   }
-  // loader(false);
 }
