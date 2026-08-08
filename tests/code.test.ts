@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { handleEdit, onCalculate, onOpen, onSelectionChange } from "../src/Code";
 import { defaultSplitRatio, monthlySheet, otherSheetContants, summarySheet } from "../src/constants";
+import { SHEET_IDS, WORKBOOK_ID } from "../src/constants/globals";
 import * as mainModule from "../src/main";
+import { setGlobalIds } from "../src/utils/globalIdUtils";
 
 type RecordedWrite = { row: number; col: number; value: unknown };
 
@@ -19,7 +21,7 @@ function createSheet({
   activeRow?: number;
   activeCol?: number;
   lastColumn?: number;
-  sheetId?: number;
+  sheetId?: number | string;
 }) {
   const writes: RecordedWrite[] = [];
 
@@ -45,6 +47,7 @@ function createSheet({
 
 function createSpreadsheet(sheet: GoogleAppsScript.Spreadsheet.Sheet) {
   return {
+    getId: vi.fn(() => WORKBOOK_ID),
     getName: vi.fn(() => "Home Expenses"),
     getActiveSheet: vi.fn(() => sheet),
   } as unknown as GoogleAppsScript.Spreadsheet.Spreadsheet;
@@ -55,6 +58,8 @@ describe("Code.ts event handlers", () => {
     vi.restoreAllMocks();
     vi.stubGlobal("Logger", { log: vi.fn() });
     vi.stubGlobal("console", { log: vi.fn() });
+    setGlobalIds({ type: "workbookId", id: WORKBOOK_ID });
+    setGlobalIds({ type: "activeWorkSheetId", id: "101" });
   });
 
   it("logs the workbook id and current sheet id when the spreadsheet opens", () => {
@@ -90,6 +95,7 @@ describe("Code.ts event handlers", () => {
   });
 
   it("does nothing when onCalculate is run on a non-summary sheet", () => {
+    setGlobalIds({ type: "activeWorkSheetId", id: "101" });
     const sheet = createSheet({ name: "January" });
     vi.stubGlobal("SpreadsheetApp", {
       getActiveSpreadsheet: vi.fn(() => ({
@@ -105,7 +111,8 @@ describe("Code.ts event handlers", () => {
   });
 
   it("runs the calculation process when onCalculate is triggered from the summary sheet", () => {
-    const sheet = createSheet({ name: summarySheet.name });
+    setGlobalIds({ type: "activeWorkSheetId", id: SHEET_IDS.Z_SUMMARY });
+    const sheet = createSheet({ name: summarySheet.name, sheetId: Number(SHEET_IDS.Z_SUMMARY) });
     vi.stubGlobal("SpreadsheetApp", {
       getActiveSpreadsheet: vi.fn(() => ({
         getActiveSheet: vi.fn(() => sheet),
@@ -121,7 +128,8 @@ describe("Code.ts event handlers", () => {
   });
 
   it("swallows calculation errors in onCalculate without throwing", () => {
-    const sheet = createSheet({ name: summarySheet.name });
+    setGlobalIds({ type: "activeWorkSheetId", id: SHEET_IDS.Z_SUMMARY });
+    const sheet = createSheet({ name: summarySheet.name, sheetId: Number(SHEET_IDS.Z_SUMMARY) });
     vi.stubGlobal("SpreadsheetApp", {
       getActiveSpreadsheet: vi.fn(() => ({
         getActiveSheet: vi.fn(() => sheet),
@@ -136,30 +144,24 @@ describe("Code.ts event handlers", () => {
   });
 
   it("returns early when handleEdit is called for a spreadsheet that is not validated", () => {
-    vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => ({
-        getName: vi.fn(() => "Other Workbook"),
-      })),
-    });
+    setGlobalIds({ type: "workbookId", id: "other-workbook-id" });
 
     const sheet = createSheet({ name: "January" });
     const spreadsheet = createSpreadsheet(sheet);
-    const activeSpreadsheet = vi.stubGlobal("SpreadsheetApp", {
+    vi.stubGlobal("SpreadsheetApp", {
       getActiveSpreadsheet: vi.fn(() => spreadsheet),
     });
-    void activeSpreadsheet;
 
     expect(() => handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit)).not.toThrow();
     expect((sheet as typeof sheet & { writes: RecordedWrite[] }).writes).toEqual([]);
   });
 
   it("returns early when the edited sheet is the summary sheet", () => {
-    const sheet = createSheet({ name: summarySheet.name });
+    setGlobalIds({ type: "activeWorkSheetId", id: SHEET_IDS.Z_SUMMARY });
+    const sheet = createSheet({ name: summarySheet.name, sheetId: Number(SHEET_IDS.Z_SUMMARY) });
+    const spreadsheet = createSpreadsheet(sheet);
     vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => ({
-        getName: vi.fn(() => "Home Expenses"),
-        getActiveSheet: vi.fn(() => sheet),
-      })),
+      getActiveSpreadsheet: vi.fn(() => spreadsheet),
     });
 
     expect(() => handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit)).not.toThrow();
@@ -172,11 +174,9 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 100, "3:2", "", ""],
       activeCol: 1,
     });
+    const spreadsheet = createSpreadsheet(sheet);
     vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => ({
-        getName: vi.fn(() => "Home Expenses"),
-        getActiveSheet: vi.fn(() => sheet),
-      })),
+      getActiveSpreadsheet: vi.fn(() => spreadsheet),
     });
 
     handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit);
@@ -190,11 +190,9 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 100, "", "", ""],
       activeCol: monthlySheet.amountCol,
     });
+    const spreadsheet = createSpreadsheet(sheet);
     vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => ({
-        getName: vi.fn(() => "Home Expenses"),
-        getActiveSheet: vi.fn(() => sheet),
-      })),
+      getActiveSpreadsheet: vi.fn(() => spreadsheet),
     });
 
     handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit);
@@ -214,11 +212,9 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 0, "3:2", "", ""],
       activeCol: monthlySheet.amountCol,
     });
+    const spreadsheet = createSpreadsheet(sheet);
     vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => ({
-        getName: vi.fn(() => "Home Expenses"),
-        getActiveSheet: vi.fn(() => sheet),
-      })),
+      getActiveSpreadsheet: vi.fn(() => spreadsheet),
     });
 
     handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit);
@@ -232,11 +228,9 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 100, ratio, "", ""],
       activeCol: monthlySheet.splitRatioCol,
     });
+    const spreadsheet = createSpreadsheet(sheet);
     vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => ({
-        getName: vi.fn(() => "Home Expenses"),
-        getActiveSheet: vi.fn(() => sheet),
-      })),
+      getActiveSpreadsheet: vi.fn(() => spreadsheet),
     });
 
     expect(() => handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit)).toThrow(/ValidationError/);
@@ -248,11 +242,9 @@ describe("Code.ts event handlers", () => {
       rowValues: ["", "", "", "", 100, "1:1", "", ""],
       activeCol: monthlySheet.splitRatioCol,
     });
+    const spreadsheet = createSpreadsheet(sheet);
     vi.stubGlobal("SpreadsheetApp", {
-      getActiveSpreadsheet: vi.fn(() => ({
-        getName: vi.fn(() => "Home Expenses"),
-        getActiveSheet: vi.fn(() => sheet),
-      })),
+      getActiveSpreadsheet: vi.fn(() => spreadsheet),
     });
 
     handleEdit({} as GoogleAppsScript.Events.SheetsOnEdit);

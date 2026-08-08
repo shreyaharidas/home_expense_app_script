@@ -1,5 +1,7 @@
 import { defaultSplitRatio, monthlySheet, monthlySheetEditCols, otherSheetContants, summarySheet } from "./constants";
+import { SHEET_IDS } from "./constants/globals";
 import { calculateSummary, executeCalculationProcess } from "./main";
+import { getGlobalIds, setGlobalIds } from "./utils/globalIdUtils";
 import { getAndValidateSpreadSheet } from "./utils/sheet";
 
 export function onOpen(): void {
@@ -7,27 +9,27 @@ export function onOpen(): void {
   const activeSheet = spreadsheet.getActiveSheet();
 
   Logger.log(`Workbook ID: ${spreadsheet.getId()}`);
+  setGlobalIds({ type: "workbookId", id: spreadsheet.getId() });
+  setGlobalIds({ type: "activeWorkSheetId", id: activeSheet.getSheetId() });
   Logger.log(`Worksheet ID: ${activeSheet.getSheetId()}`);
 }
 
 export function onSelectionChange(): void {
   const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  setGlobalIds({ type: "activeWorkSheetId", id: activeSheet.getSheetId() });
   Logger.log(`Worksheet ID: ${activeSheet.getSheetId()}`);
 }
 
 export function onCalculate(): void {
-  const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const activeSheetName = activeSheet.getName();
-  Logger.log(`Active sheet changed to: ${activeSheetName}`);
+  const { activeWorkSheetId } = getGlobalIds();
 
-  if (activeSheetName === summarySheet.name) {
-    try {
-      Logger.log("inside try");
-      executeCalculationProcess(calculateSummary);
-    } catch (err) {
-      Logger.log("error in onCalculate is");
-      Logger.log(err);
-    }
+  if (activeWorkSheetId !== SHEET_IDS.Z_SUMMARY) return;
+
+  try {
+    executeCalculationProcess(calculateSummary);
+  } catch (err) {
+    Logger.log("error in onCalculate is");
+    Logger.log(err);
   }
 }
 
@@ -35,11 +37,11 @@ export function handleEdit(e: GoogleAppsScript.Events.SheetsOnEdit): void {
   const ss = getAndValidateSpreadSheet();
   if (!ss) return;
 
+  const { activeWorkSheetId } = getGlobalIds();
+
+  if (activeWorkSheetId === SHEET_IDS.Z_SUMMARY) return;
+
   const sheet = ss.getActiveSheet();
-  const sheetName = sheet.getName();
-
-  if (sheetName === "Z-Summary") return;
-
   const activeRange = sheet.getActiveRange();
   const rowNumber = activeRange.getRow();
   const colNumber = activeRange.getColumn();
