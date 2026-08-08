@@ -1,28 +1,24 @@
 import { defaultSplitRatio, monthlySheet, monthlySheetEditCols, otherSheetContants, summarySheet } from "./constants";
 import { SHEET_IDS } from "./constants/globals";
 import { calculateSummary, executeCalculationProcess } from "./main";
-import { getGlobalIds, setGlobalIds } from "./utils/globalIdUtils";
 
 export function onOpen(): void {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const activeSheet = spreadsheet.getActiveSheet();
 
   Logger.log(`Workbook ID: ${spreadsheet.getId()}`);
-  setGlobalIds({ type: "workbookId", id: spreadsheet.getId() });
-  setGlobalIds({ type: "activeWorkSheetId", id: activeSheet.getSheetId() });
   Logger.log(`Worksheet ID: ${activeSheet.getSheetId()}`);
 }
 
 export function onSelectionChange(): void {
   const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  setGlobalIds({ type: "activeWorkSheetId", id: activeSheet.getSheetId() });
   Logger.log(`Worksheet ID: ${activeSheet.getSheetId()}`);
 }
 
 export function onCalculate(): void {
-  const { activeWorkSheetId } = getGlobalIds();
+  const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
-  if (activeWorkSheetId !== SHEET_IDS.Z_SUMMARY) return;
+  if (activeSheet.getSheetId().toString() !== SHEET_IDS.Z_SUMMARY) return;
 
   try {
     executeCalculationProcess(calculateSummary);

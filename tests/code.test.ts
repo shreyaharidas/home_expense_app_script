@@ -4,7 +4,6 @@ import { handleEdit, onCalculate, onOpen, onSelectionChange } from "../src/Code"
 import { defaultSplitRatio, monthlySheet, otherSheetContants, summarySheet } from "../src/constants";
 import { SHEET_IDS, WORKBOOK_ID } from "../src/constants/globals";
 import * as mainModule from "../src/main";
-import { setGlobalIds } from "../src/utils/globalIdUtils";
 
 type RecordedWrite = { row: number; col: number; value: unknown };
 
@@ -75,8 +74,6 @@ describe("Code.ts event handlers", () => {
     vi.restoreAllMocks();
     vi.stubGlobal("Logger", { log: vi.fn() });
     vi.stubGlobal("console", { log: vi.fn() });
-    setGlobalIds({ type: "workbookId", id: WORKBOOK_ID });
-    setGlobalIds({ type: "activeWorkSheetId", id: "101" });
   });
 
   it("logs the workbook id and current sheet id when the spreadsheet opens", () => {
@@ -112,8 +109,7 @@ describe("Code.ts event handlers", () => {
   });
 
   it("does nothing when onCalculate is run on a non-summary sheet", () => {
-    setGlobalIds({ type: "activeWorkSheetId", id: "101" });
-    const sheet = createSheet({ name: "January" });
+    const sheet = createSheet({ name: "January", sheetId: 101 });
     vi.stubGlobal("SpreadsheetApp", {
       getActiveSpreadsheet: vi.fn(() => ({
         getActiveSheet: vi.fn(() => sheet),
@@ -128,7 +124,6 @@ describe("Code.ts event handlers", () => {
   });
 
   it("runs the calculation process when onCalculate is triggered from the summary sheet", () => {
-    setGlobalIds({ type: "activeWorkSheetId", id: SHEET_IDS.Z_SUMMARY });
     const sheet = createSheet({ name: summarySheet.name, sheetId: Number(SHEET_IDS.Z_SUMMARY) });
     vi.stubGlobal("SpreadsheetApp", {
       getActiveSpreadsheet: vi.fn(() => ({
@@ -145,7 +140,6 @@ describe("Code.ts event handlers", () => {
   });
 
   it("swallows calculation errors in onCalculate without throwing", () => {
-    setGlobalIds({ type: "activeWorkSheetId", id: SHEET_IDS.Z_SUMMARY });
     const sheet = createSheet({ name: summarySheet.name, sheetId: Number(SHEET_IDS.Z_SUMMARY) });
     vi.stubGlobal("SpreadsheetApp", {
       getActiveSpreadsheet: vi.fn(() => ({
