@@ -1,25 +1,6 @@
 import { monthlySheet, otherSheetContants, sheetTypes, summarySheet } from "../constants";
 
 
-// TODO: change this to use global id instead of iterating
-function getAllSheets(): string[] {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheets = ss.getSheets();
-
-  Logger.log("activesheet sheets");
-  Logger.log(sheets);
-
-  const sheetNames: string[] = [];
-  sheets.forEach((sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
-    const name = sheet.getName();
-    Logger.log("Sheet Name: " + name);
-    sheetNames.push(name);
-  });
-
-  Logger.log("all sheet names: ");
-  Logger.log(sheetNames);
-  return sheetNames;
-}
 
 export function findCurrentSheetRowIndex(rowData: unknown[], sheetName: string): boolean {
   return rowData[0] === sheetName;
@@ -101,34 +82,28 @@ export function getSheets(sheetType?: string): {
   summarySheet?: GoogleAppsScript.Spreadsheet.Sheet;
   monthlySheets?: GoogleAppsScript.Spreadsheet.Sheet[];
 } {
-  const aSS = SpreadsheetApp.getActiveSpreadsheet();
+  const activeSpreadSheet = SpreadsheetApp.getActiveSpreadsheet();
 
   if (sheetType === sheetTypes.summary) {
     return {
-      summarySheet: aSS.getSheetByName(summarySheet.name) ?? undefined,
+      summarySheet: activeSpreadSheet.getSheetByName(summarySheet.name) ?? undefined,
     };
   }
 
   if (sheetType === sheetTypes.monthlySheet) {
-    const sheetNames = getAllSheets();
-    const monthlySheets = sheetNames
-      .filter((sheetName) => sheetName !== "Z-Summary")
-      .map((sheetName) => aSS.getSheetByName(sheetName))
-      .filter((sheet): sheet is GoogleAppsScript.Spreadsheet.Sheet => Boolean(sheet));
+    const sheets = activeSpreadSheet.getSheets();
+    const monthlySheets = sheets.filter((sheet) => sheet.getName() !== summarySheet.name);
 
     return { monthlySheets };
   }
 
   if (!sheetType) {
-    const sheetNames = getAllSheets();
-    const monthlySheets = sheetNames
-      .filter((sheetName) => sheetName !== "Z-Summary")
-      .map((sheetName) => aSS.getSheetByName(sheetName))
-      .filter((sheet): sheet is GoogleAppsScript.Spreadsheet.Sheet => Boolean(sheet));
+    const sheets = activeSpreadSheet.getSheets();
+    const monthlySheets = sheets.filter((sheet) => sheet.getName() !== summarySheet.name);
 
     return {
       monthlySheets,
-      summarySheet: aSS.getSheetByName(summarySheet.name) ?? undefined,
+      summarySheet: activeSpreadSheet.getSheetByName(summarySheet.name) ?? undefined,
     };
   }
 
