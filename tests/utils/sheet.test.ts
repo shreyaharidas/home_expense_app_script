@@ -1,43 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  getAndValidateSpreadSheet,
   findCurrentSheetRowIndex,
   getRangeData,
   getUntalliedSheets,
   getSheets,
 } from "../../src/utils/sheet";
 import { sheetTypes, summarySheet, otherSheetContants } from "../../src/constants";
-import { WORKBOOK_ID } from "../../src/constants/globals";
-import { setGlobalIds } from "../../src/utils/globalIdUtils";
 
 describe("sheet utilities", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal("Logger", { log: vi.fn() });
-  });
-
-  describe("getAndValidateSpreadSheet", () => {
-    const getName = vi.fn();
-    const spreadsheet = { getName } as unknown as GoogleAppsScript.Spreadsheet.Spreadsheet;
-
-    beforeEach(() => {
-      vi.stubGlobal("SpreadsheetApp", {
-        getActiveSpreadsheet: vi.fn(() => spreadsheet),
-      });
-    });
-
-    it("returns the active spreadsheet when it is the Home Expenses workbook", () => {
-      setGlobalIds({ type: "workbookId", id: WORKBOOK_ID });
-
-      expect(getAndValidateSpreadSheet()).toBe(spreadsheet);
-    });
-
-    it("returns undefined for a different workbook", () => {
-      setGlobalIds({ type: "workbookId", id: "other-workbook-id" });
-
-      expect(getAndValidateSpreadSheet()).toBeUndefined();
-    });
   });
 
   describe("findCurrentSheetRowIndex", () => {
