@@ -24,8 +24,6 @@ export interface monthlySheetFormat extends SheetFormat {
 export type summarySheetFormat = SheetFormat & {
   name: string;
   totalCols: number;
-  loaderIndex: number;
-  loaderWidthInPx: number;
   summarySheetHeaders: SummarySheetHeaders;
 };
 
@@ -43,8 +41,6 @@ export const monthlySheetEditCols = [monthlySheet.amountCol, monthlySheet.splitR
 export const summarySheet: summarySheetFormat = {
   name: "Z-Summary",
   totalCols: 7,
-  loaderIndex: 12,
-  loaderWidthInPx: 113,
   summarySheetHeaders: {
     month: "Month",
     tallied: "Tallied",

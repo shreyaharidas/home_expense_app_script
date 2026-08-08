@@ -39,12 +39,19 @@ function createSheet({
     getSheetId: vi.fn(() => sheetId),
     getLastColumn: vi.fn(() => lastColumn),
     getActiveRange: vi.fn(() => rangeObj),
-    getRange: vi.fn((row: number, col: number) => ({
+    getRange: vi.fn((row: number, col: number, numRows?: number, numCols?: number) => ({
       getRow: () => row,
       getColumn: () => col,
       getSheet: () => sheet,
       setValue: (value: unknown) => {
         writes.push({ row, col, value });
+      },
+      setValues: (values: Array<Array<unknown>>) => {
+        values.forEach((rowVals, rIdx) => {
+          rowVals.forEach((val, cIdx) => {
+            writes.push({ row: row + rIdx, col: col + cIdx, value: val });
+          });
+        });
       },
       getValues: () => [rowValues],
     })),
